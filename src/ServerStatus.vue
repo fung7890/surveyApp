@@ -1,0 +1,246 @@
+<template>
+
+    <div>
+
+    <div id="app">
+    <div class="container">
+      <div class="Chart__list">
+        <div class="Chart">
+          <h2 v-if="currentPage===quiz.examples.length+1">Results</h2>
+          <bar-chart v-if="currentPage===quiz.examples.length + 1 && this.total.length > 9" :data="{labels: ['Meaning', 'Mastery','Curiosity','Immersion','Autonomy',
+          'Goals & Rules','Audiovisual Appeal','Challenge','Ease-of-Control','Progress Feedback' ], datasets:[{
+      label: 'Score',
+      backgroundColor: '#f87979',
+      data: this.total
+    },
+
+
+    ]}" ></bar-chart>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+         <div  v-if ="currentPage > 0 && currentPage < 36">
+            <button v-on:click="currentPage--">Back</button>
+        </div>
+        <span v-if ="currentPage < quiz.examples.length">
+            <button v-on:click="currentPage++">Next</button>
+            <p>Current question: {{ currentPage + 1}}</p>
+            <p>Length of quiz: {{quiz.examples.length}} questions</p>
+        </span>
+
+
+
+        <!-- index is current index of the questions, responses is an array, using responses[index] will allow unique reference in that array -->
+        <div v-for="(question, index) in quiz.examples">
+            <div v-if="index === currentPage">
+                <p>{{question.text}}</p>
+                <form>
+
+                    <!-- <div v-for="option in question.options">
+                        <input type="radio" name="index" v-bind:value="[option,question.text]" v-model="responses[index]"> {{ option }}<br>
+                    </div> -->
+
+                    <b-form-radio-group id="radios2" v-model="responses[index]" name="radioSubComponent">
+                        <b-form-radio v-bind:value = "[1, question.text, question.category]"> 1 </b-form-radio>
+                        <b-form-radio v-bind:value= "[2, question.text, question.category]"> 2 </b-form-radio>
+                        <b-form-radio v-bind:value= "[3, question.text, question.category]"> 3 </b-form-radio>
+                        <b-form-radio v-bind:value= "[4, question.text, question.category]"> 4 </b-form-radio>
+                        <b-form-radio v-bind:value= "[5, question.text, question.category]"> 5 </b-form-radio>
+                        <b-form-radio v-bind:value= "[6, question.text, question.category]"> 6 </b-form-radio>
+                        <b-form-radio v-bind:value= "[7, question.text, question.category]"> 7 </b-form-radio>
+
+                    </b-form-radio-group>
+
+
+
+                </form>
+
+            </div>
+
+        </div>
+
+        <hr>
+        <div v-if="currentPage === quiz.examples.length">
+                <button v-on:click="handler">Submit</button>
+            </div>
+
+    </div>
+</template>
+
+
+<script>
+import BarChart from './newChart.js'
+
+import * as firebase from 'firebase'
+
+
+
+
+// quiz data
+var quiz = {
+
+    examples: [
+
+    {   text: "Playing the game was meaningful to me.", options: [1,2,3,4,5,6,7], category: "Meaning"},
+    {   text: "Playing this game was valuable to me.", options: [1,2,3,4,5,6,7], category: "Meaning"},
+    {   text: "The game felt relevant to me.", options: [1,2,3,4,5,6,7], category: "Meaning"},
+    {   text: "I felt I was good at playing this game.", options: [1,2,3,4,5,6,7], category: "Mastery"},
+    {   text: "I felt capable while playing the game.", options: [1,2,3,4,5,6,7], category: "Mastery"},
+    {   text: "I felt a sense of mastery playing this game.", options: [1,2,3,4,5,6,7], category: "Mastery"},
+    {   text: "I felt a sense of accomplishment playing this game.", options: [1,2,3,4,5,6,7], category: "Mastery"},
+    {   text: "I wanted to explore how the game evolved.", options: [1,2,3,4,5,6,7], category: "Curiosity"},
+    {   text: "I felt eager to discover how the game continued.", options: [1,2,3,4,5,6,7], category: "Curiosity"},
+    {   text: "I wanted to find out how the game progressed.", options: [1,2,3,4,5,6,7], category: "Curiosity"},
+    {   text: "I was driven to discover more in the game.", options: [1,2,3,4,5,6,7], category: "Curiosity"},
+    {   text: "I was no longer aware of my surroundings while I was playing.", options: [1,2,3,4,5,6,7], category: "Immersion"},
+    {   text: "I was immersed in the game.", options: [1,2,3,4,5,6,7], category: "Immersion"},
+    {   text: "I was absorbed by the gameplay.", options: [1,2,3,4,5,6,7], category: "Immersion"},
+    {   text: "I was fully focused on the game.", options: [1,2,3,4,5,6,7], category: "Immersion"},
+    {   text: "I felt free to play the game in my own way.", options: [1,2,3,4,5,6,7], category: "Autonomy"},
+    {   text: "I felt like I had choices regarding how I wanted to play this game.", options: [1,2,3,4,5,6,7], category: "Autonomy"},
+    {   text: "I felt a sense of freedom about how I wanted to play this game.", options: [1,2,3,4,5,6,7], category: "Autonomy"},
+    {   text: "I understood the objectives of the game.", options: [1,2,3,4,5,6,7], category: "Goals and Rules"},
+    {   text: "I grasped the overall goal of the game.", options: [1,2,3,4,5,6,7], category: "Goals and Rules"},
+    {   text: "The goals of the game were clear to me.", options: [1,2,3,4,5,6,7], category: "Goals and Rules"},
+    {   text: "The rules of the game were clear to me.", options: [1,2,3,4,5,6,7], category: "Goals and Rules"},
+    {   text: "I enjoyed the way the game was styled.", options: [1,2,3,4,5,6,7], category: "Audiovisual Appeal"},
+    {   text: "I liked the look and feel of the game.", options: [1,2,3,4,5,6,7], category: "Audiovisual Appeal"},
+    {   text: "I appreciated the aesthetics of the game.", options: [1,2,3,4,5,6,7], category: "Audiovisual Appeal"},
+    {   text: "The game was not too easy and not too hard to play.", options: [1,2,3,4,5,6,7], category: "Challenge"},
+    {   text: "The game was challenging but not too challenging.", options: [1,2,3,4,5,6,7], category: "Challenge"},
+    {   text: "The challenges in the game were at the right level of difficulty for me.", options: [1,2,3,4,5,6,7], category: "Challenge"},
+    {   text: "It was easy to know how to perform actions in the game.", options: [1,2,3,4,5,6,7], category: "Ease-of-Control"},
+    {   text: "The actions to control the game were clear to me.", options: [1,2,3,4,5,6,7], category: "Ease-of-Control"},
+    {   text: "I thought the game was easy to control.", options: [1,2,3,4,5,6,7], category: "Ease-of-Control"},
+    {   text: "I quickly grasped how to perform in-game actions.", options: [1,2,3,4,5,6,7], category: "Ease-of-Control"},
+    {   text: "The game informed me of my progress in the game.", options: [1,2,3,4,5,6,7], category: "Progress Feedback"},
+    {   text: "The game gave clear feedback on my progress towards the goals.", options: [1,2,3,4,5,6,7], category: "Progress Feedback"},
+    {   text: "I could easily assess how I was performing in the game.", options: [1,2,3,4,5,6,7], category: "Progress Feedback"},
+  ]
+};
+
+// function
+
+export default {
+
+
+  name: 'app',
+  components: {
+    BarChart
+  },
+
+  data: function(){
+    return{
+        currentPage: 0,
+        quiz: quiz,
+        responses:[],
+
+        meaning:[],
+        mastery:[],
+        curiosity:[],
+        immersion:[],
+        autonomy:[],
+        goals:[],
+        audioVisual:[],
+        challenge:[],
+        ease:[],
+        progress:[],
+
+        total:[]
+      }
+  },
+
+
+  methods:{
+
+      submit(){
+        firebase.database().ref('results').push(this.responses)
+            .then((data) => {
+                console.log(data)
+            })
+      },
+      updateScore(){
+        for (var i = 0; i < this.responses.length; i++){
+
+          if (this.responses[i] !== undefined){
+
+            switch(this.responses[i][2]){
+
+            case "Meaning":
+                this.meaning.push(this.responses[i][0]);
+                break;
+            case "Mastery":
+                this.mastery.push(this.responses[i][0]);
+                break;
+            case "Curiosity":
+                this.curiosity.push(this.responses[i][0]);
+                break;
+            case "Immersion":
+                this.immersion.push(this.responses[i][0]);
+                break;
+            case "Autonomy":
+                this.autonomy.push(this.responses[i][0]);
+                break;
+            case "Goals and Rules":
+                this.goals.push(this.responses[i][0]);
+                break;
+            case "Audiovisual Appeal":
+                this.audioVisual.push(this.responses[i][0]);
+                break;
+            case "Challenge":
+                this.challenge.push(this.responses[i][0]);
+                break;
+            case "Ease-of-Control":
+                this.ease.push(this.responses[i][0]);
+                break;
+            case "Progress Feedback":
+                this.progress.push(this.responses[i][0]);
+                break;
+
+          }
+          }
+        }
+
+        this.total.push(this.average(this.meaning));
+        this.total.push(this.average(this.mastery));
+        this.total.push(this.average(this.curiosity));
+        this.total.push(this.average(this.immersion));
+        this.total.push(this.average(this.autonomy));
+        this.total.push(this.average(this.goals));
+        this.total.push(this.average(this.audioVisual));
+        this.total.push(this.average(this.challenge));
+        this.total.push(this.average(this.ease));
+        this.total.push(this.average(this.progress));
+
+
+
+        console.log(this.total);
+      },
+
+      average(arr){
+        var avg = 0;
+
+        if (arr.length != 0) {
+          for (var i = 0; i < arr.length; i++){
+            avg += arr[i]/arr.length;
+          }
+        }
+
+        return avg;
+      },
+
+      handler(){
+        this.updateScore();
+        this.submit();
+        this.currentPage++;
+      }
+
+
+
+}}
+</script>
