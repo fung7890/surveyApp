@@ -1,28 +1,36 @@
 <template>
 
+  <b-container>
     <div>
 
     <div id="app">
     <div class="container">
       <div class="Chart__list">
         <div class="Chart">
-          <h2 v-if="currentPage===quiz.examples.length+1">Results</h2>
-          <bar-chart v-if="currentPage===quiz.examples.length + 1 && this.total.length > 9" :data="{labels: ['Meaning', 'Mastery','Curiosity','Immersion','Autonomy',
-          'Goals & Rules','Audiovisual Appeal','Challenge','Ease-of-Control','Progress Feedback' ], datasets:[{
-      label: 'Score',
-      backgroundColor: '#f87979',
-      data: this.total
-    },
 
+          <div v-if="currentPage===quiz.examples.length+1">
+          <h2 >Results</h2>
 
-    ]}" ></bar-chart>
+          <p1>{{overAllScore}}</p1>
+
+          <bar-chart v-if="this.total.length > 9" :data="{labels: ['Aesthetics', 'Dynamics' ], datasets:[{    // checking total's length accounts for async
+            label: 'Score',
+            backgroundColor: ['#5cb85c','#8B008B'],
+            data: this.aestheticsDynamics },]}">
+          </bar-chart>
+
+          <bar-chart v-if="this.total.length > 9" :data="{labels: ['Meaning', 'Mastery','Curiosity','Immersion','Autonomy',
+            'Goals & Rules','Audiovisual Appeal','Challenge','Ease-of-Control','Progress Feedback' ], datasets:[{
+            label: 'Score',
+            backgroundColor: ['#f87979', '#d9534f', '#5bc0de','#5cb85c','#8B008B','#f87979', '#d9534f', '#5bc0de','#5cb85c','#8B008B'],
+            data: this.total },]}">
+          </bar-chart>
+
+          </div>
         </div>
       </div>
     </div>
   </div>
-
-
-
 
          <div  v-if ="currentPage > 0 && currentPage < 36">
             <button v-on:click="currentPage--">Back</button>
@@ -41,10 +49,6 @@
                 <p>{{question.text}}</p>
                 <form>
 
-                    <!-- <div v-for="option in question.options">
-                        <input type="radio" name="index" v-bind:value="[option,question.text]" v-model="responses[index]"> {{ option }}<br>
-                    </div> -->
-
                     <b-form-radio-group id="radios2" v-model="responses[index]" name="radioSubComponent">
                         <b-form-radio v-bind:value = "[1, question.text, question.category]"> 1 </b-form-radio>
                         <b-form-radio v-bind:value= "[2, question.text, question.category]"> 2 </b-form-radio>
@@ -55,13 +59,8 @@
                         <b-form-radio v-bind:value= "[7, question.text, question.category]"> 7 </b-form-radio>
 
                     </b-form-radio-group>
-
-
-
                 </form>
-
             </div>
-
         </div>
 
         <hr>
@@ -70,6 +69,8 @@
             </div>
 
     </div>
+  </b-container>
+
 </template>
 
 
@@ -151,7 +152,11 @@ export default {
         ease:[],
         progress:[],
 
-        total:[]
+        total:[],
+        aestheticsDynamics:[],
+        aestheticsScore: 0,
+        dynamicsScore: 0,
+        overAllScore: 0
       }
   },
 
@@ -165,6 +170,10 @@ export default {
             })
       },
       updateScore(){
+
+        var aeDenominator = 0;
+        var dyDenominator = 0;
+
         for (var i = 0; i < this.responses.length; i++){
 
           if (this.responses[i] !== undefined){
@@ -217,9 +226,33 @@ export default {
         this.total.push(this.average(this.ease));
         this.total.push(this.average(this.progress));
 
+        for (var j = 0; j < this.total.length; j++){                   // figure out what denominator to use, accoutning for unanswered q's
+          if (j < 5 && this.total[j] !== 0){
+            aeDenominator += 1;
+          } else if (j >= 5 && this.total[j] !==0){
+            dyDenominator += 1;
+          }
+        }
+
+        for (var k = 0; k < this.total.length; k++){                   // split total score into aesthetics and dynamics scores
+          if (k < 5){
+            this.aestheticsScore += this.total[k]/aeDenominator;       // first 5 belong to aesthetics group
+          } else if (k >= 5){
+            this.dynamicsScore += this.total[k]/dyDenominator;         // last 5 belong to dynamics group
+          }
+
+        }
+
+        this.aestheticsDynamics.push(this.aestheticsScore);
+        this.aestheticsDynamics.push(this.dynamicsScore);
+
+        this.overAllScore = this.checkNaN(this.aestheticsScore, this.dynamicsScore);
+        console.log(this.aestheticsScore);
+        console.log(this.dynamicsScore);
+        console.log(this.overAllScore);
 
 
-        console.log(this.total);
+
       },
 
       average(arr){
@@ -232,6 +265,16 @@ export default {
         }
 
         return avg;
+      },
+
+      checkNaN(aesthetics, dynamics){
+        if (isNaN(aesthetics)){
+          return dynamics;
+        } else if (isNaN(dynamics)){
+          return aesthetics;
+        } else {
+          return (dynamics + aesthetics)/2;
+        }
       },
 
       handler(){
