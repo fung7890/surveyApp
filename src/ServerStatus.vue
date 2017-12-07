@@ -1,7 +1,22 @@
-<template>
+<style>
 
+
+.question{
+  font-size: 40px;
+}
+
+.score{
+  font-size: 50px;
+}
+</style>
+
+
+
+<template >
   <b-container>
-    <div>
+    <b-row>
+      <b-col>
+    <div class="text-center">
 
     <div id="app">
     <div class="container">
@@ -11,17 +26,24 @@
           <div v-if="currentPage===quiz.examples.length+1">
           <h2 >Results</h2>
 
-          <p1>{{overAllScore}}</p1>
+          <p1 class="score">Overall Score {{overAllScore}} / 7</p1>
+          <br><br>
 
           <bar-chart v-if="this.total.length > 9" :data="{labels: ['Aesthetics', 'Dynamics' ], datasets:[{    // checking total's length accounts for async
-            label: 'Score',
+            label: '',
             backgroundColor: ['#5cb85c','#8B008B'],
-            data: this.aestheticsDynamics },]}">
+            data: this.aestheticsDynamics },
+
+
+            ]}"
+            :width="400"
+            :height="200">
           </bar-chart>
+          <br><br><br>
 
           <bar-chart v-if="this.total.length > 9" :data="{labels: ['Meaning', 'Mastery','Curiosity','Immersion','Autonomy',
             'Goals & Rules','Audiovisual Appeal','Challenge','Ease-of-Control','Progress Feedback' ], datasets:[{
-            label: 'Score',
+            label: '',
             backgroundColor: ['#f87979', '#d9534f', '#5bc0de','#5cb85c','#8B008B','#f87979', '#d9534f', '#5bc0de','#5cb85c','#8B008B'],
             data: this.total },]}">
           </bar-chart>
@@ -32,43 +54,54 @@
     </div>
   </div>
 
-         <div  v-if ="currentPage > 0 && currentPage < 36">
-            <button v-on:click="currentPage--">Back</button>
-        </div>
-        <span v-if ="currentPage < quiz.examples.length">
-            <button v-on:click="currentPage++">Next</button>
-            <p>Current question: {{ currentPage + 1}}</p>
-            <p>Length of quiz: {{quiz.examples.length}} questions</p>
-        </span>
 
-
-
+        <b-progress v-if ="currentPage >= 0 && currentPage < 36" :value="currentPage" :max="35" variant="success"></b-progress>
+        <br>
         <!-- index is current index of the questions, responses is an array, using responses[index] will allow unique reference in that array -->
         <div v-for="(question, index) in quiz.examples">
             <div v-if="index === currentPage">
-                <p>{{question.text}}</p>
-                <form>
-
-                    <b-form-radio-group id="radios2" v-model="responses[index]" name="radioSubComponent">
-                        <b-form-radio v-bind:value = "[1, question.text, question.category]"> 1 </b-form-radio>
-                        <b-form-radio v-bind:value= "[2, question.text, question.category]"> 2 </b-form-radio>
-                        <b-form-radio v-bind:value= "[3, question.text, question.category]"> 3 </b-form-radio>
-                        <b-form-radio v-bind:value= "[4, question.text, question.category]"> 4 </b-form-radio>
-                        <b-form-radio v-bind:value= "[5, question.text, question.category]"> 5 </b-form-radio>
-                        <b-form-radio v-bind:value= "[6, question.text, question.category]"> 6 </b-form-radio>
-                        <b-form-radio v-bind:value= "[7, question.text, question.category]"> 7 </b-form-radio>
+                <p class="question text-center">{{question.text}}</p>
+                <form class = "text-center">
+                    <br><br>
+                    <b-form-radio-group id="radios2" v-model="responses[index]" name="radioSubComponent" size="xl">
+                        <b-form-radio v-bind:value = "[1, question.text, question.category]"> 1  </b-form-radio>
+                        <b-form-radio v-bind:value= "[2, question.text, question.category]"> 2  </b-form-radio>
+                        <b-form-radio v-bind:value= "[3, question.text, question.category]"> 3  </b-form-radio>
+                        <b-form-radio v-bind:value= "[4, question.text, question.category]"> 4  </b-form-radio>
+                        <b-form-radio v-bind:value= "[5, question.text, question.category]"> 5  </b-form-radio>
+                        <b-form-radio v-bind:value= "[6, question.text, question.category]"> 6  </b-form-radio>
+                        <b-form-radio v-bind:value= "[7, question.text, question.category]"> 7  </b-form-radio>
 
                     </b-form-radio-group>
                 </form>
             </div>
         </div>
 
+
+
+
+        <br>
+
+        <span v-if ="currentPage < quiz.examples.length">
+            <b-button v-on:click="currentPage++" variant="success" size="lg" >Next</b-button>
+            <!-- <p>Current question: {{ currentPage + 1}}</p>
+            <p>Length of quiz: {{quiz.examples.length}} questions</p> -->
+        </span>
+        <br><br>
+        <div  v-if ="currentPage > 0 && currentPage < 36">
+            <b-button v-on:click="currentPage--"size="sm" >Back</b-button>
+        </div>
+
+
         <hr>
         <div v-if="currentPage === quiz.examples.length">
-                <button v-on:click="handler">Submit</button>
+                <b-button v-on:click="handler" variant="success" size="lg">Submit</b-button>
             </div>
 
+
     </div>
+  </b-col>
+  </b-row>
   </b-container>
 
 </template>
@@ -156,7 +189,14 @@ export default {
         aestheticsDynamics:[],
         aestheticsScore: 0,
         dynamicsScore: 0,
-        overAllScore: 0
+        overAllScore: 0,
+
+
+        styleObj: {
+          fontSize: '30px',
+        }
+
+
       }
   },
 
